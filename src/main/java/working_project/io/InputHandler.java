@@ -1,7 +1,6 @@
 package working_project.io;
 
 import imgui.ImGui;
-import org.joml.Vector2f;
 import working_project.model.ModelManager;
 import working_project.core.Camera;
 import working_project.core.WindowManager;
@@ -17,7 +16,6 @@ public class InputHandler {
     private final double[] lastX = {0};
     private final double[] lastY = {0};
     private final boolean[] firstMouseMovement = {true};
-    private final Vector3f objectCenter = new Vector3f(0, 0, 0);
 
     public InputHandler(WindowManager window, Camera camera, ModelManager modelManager, boolean[] lassoMode) {
         lastX[0] = window.getWidth() / 2.0;
@@ -25,33 +23,15 @@ public class InputHandler {
 
         window.setKeyCallback((windowHandle, key, scancode, action, mods) -> {
             if (action == GLFW_PRESS || action == GLFW_REPEAT) {
-                float speed = 0.1f;
+                float speed = 0.2f;
                 float rotationSpeed = 2.0f;
 
-                Vector3f forward = camera.getDirection();
-                Vector3f up = new Vector3f(0, 1, 0);
-                Vector3f right = forward.cross(up).normalize();
-
+                // Перемещение камеры
                 if (key == GLFW_KEY_W) camera.move(0, speed, 0);
                 if (key == GLFW_KEY_S) camera.move(0, -speed, 0);
-                if (key == GLFW_KEY_Q) {
-                    Vector3f moveDir = new Vector3f(forward).mul(speed);
-                    camera.move(moveDir.x, 0, moveDir.z);
-                }
-                if (key == GLFW_KEY_E) {
-                    Vector3f moveDir = new Vector3f(forward).mul(-speed);
-                    camera.move(moveDir.x, 0, moveDir.z);
-                }
-                if (key == GLFW_KEY_A) {
-                    Vector3f moveDir = new Vector3f(right).mul(-speed);
-                    camera.move(moveDir.x, 0, moveDir.z);
-                }
-                if (key == GLFW_KEY_D) {
-                    Vector3f moveDir = new Vector3f(right).mul(speed);
-                    camera.move(moveDir.x, 0, moveDir.z);
-                }
+                if (key == GLFW_KEY_A) camera.move(-speed, 0, 0);
+                if (key == GLFW_KEY_D) camera.move(speed, 0, 0);
 
-                // лассо: Отключить вращение модели в режиме лассо
                 if (!lassoMode[0]) {
                     if (key == GLFW_KEY_LEFT) modelManager.updateModelYaw(-rotationSpeed);
                     if (key == GLFW_KEY_RIGHT) modelManager.updateModelYaw(rotationSpeed);
@@ -99,7 +79,6 @@ public class InputHandler {
                     float deltaY = (float) (lastY[0] - ypos);
 
                     camera.rotate(deltaX, deltaY, cameraSensitivity);
-
                     System.out.printf("Camera: yaw=%.2f, pitch=%.2f\n", camera.getYaw(), camera.getPitch());
                 }
 
@@ -124,11 +103,9 @@ public class InputHandler {
                     if (action == GLFW_PRESS) {
                         rightMouseButtonPressed.set(true);
                         firstMouseMovement[0] = true;
-                        // лассо: Логирование в зависимости от режима
                         System.out.println("Right mouse button pressed, " + (lassoMode[0] ? "lasso mode" : "camera rotation") + " enabled");
                     } else if (action == GLFW_RELEASE) {
                         rightMouseButtonPressed.set(false);
-                        // лассо: Логирование в зависимости от режима
                         System.out.println("Right mouse button released, " + (lassoMode[0] ? "lasso mode" : "camera rotation") + " disabled");
                     }
                 }
@@ -153,14 +130,4 @@ public class InputHandler {
             }
         });
     }
-    // лассо: Возвращает состояние правой кнопки мыши
-    public boolean isRightMouseButtonPressed() {
-        return rightMouseButtonPressed.get();
-    }
-
-    // лассо: Возвращает текущие координаты курсора
-    public Vector2f getCursorPosition() {
-        return new Vector2f((float) lastX[0], (float) lastY[0]);
-    }
 }
-
