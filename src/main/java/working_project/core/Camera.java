@@ -13,33 +13,26 @@ public class Camera {
 
     public Camera(Vector3f initialPosition) {
         this.position = new Vector3f(initialPosition);
-        this.yaw = -90.0f;
-        this.pitch = 0.0f;
+        this.yaw = -90.0f; // Смотрим вдоль отрицательной оси X (на начало координат)
+        this.pitch = 0.0f; // Горизонтально
         this.isOrthographic = false;
     }
 
     public void move(float x, float y, float z) {
-        Vector3f direction = getDirection();
-        Vector3f right = direction.cross(new Vector3f(0, 1, 0)).normalize();
-        Vector3f up = right.cross(direction).normalize();
-        position.add(right.mul(x)).add(up.mul(y)).add(direction.mul(z));
-    }
-
-    public void setPosition(Vector3f newPosition) {
-        this.position.set(newPosition);
+        position.add(x, y, z);
     }
 
     public void rotate(float xOffset, float yOffset, float sensitivity) {
         xOffset *= sensitivity;
         yOffset *= sensitivity;
         yaw += xOffset;
-        pitch += yOffset; // Инвертируем Y для естественного управления
+        pitch += yOffset;
         pitch = Math.max(-89.0f, Math.min(89.0f, pitch));
     }
 
-    public void resetRotation() {
-        yaw = -90.0f;
-        pitch = 0.0f;
+
+    public void setPosition(Vector3f newPosition) {
+        this.position.set(newPosition);
     }
 
     public Vector3f getPosition() {
@@ -80,27 +73,6 @@ public class Camera {
 
     public void toggleProjection() {
         isOrthographic = !isOrthographic;
-        System.out.println("Проекция переключена на: " + (isOrthographic ? "ортографическая" : "перспективная"));
-    }
-
-    public boolean isOrthographic() {
-        return isOrthographic;
-    }
-
-    // Методы для настройки параметров проекции
-    public void setFov(float fov) {
-        this.fov = Math.max(30.0f, Math.min(90.0f, fov));
-    }
-
-    public float getFov() {
-        return fov;
-    }
-
-    public void setOrthoSize(float size) {
-        this.orthoSize = Math.max(1.0f, size);
-    }
-
-    public float getOrthoSize() {
-        return orthoSize;
+        System.out.println("Projection: " + (isOrthographic ? "orthographic" : "perspective"));
     }
 }
