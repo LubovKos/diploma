@@ -62,7 +62,7 @@ public class ShaderProgram {
     public void setUniform1f(String name, float value) {
         int location = GL20.glGetUniformLocation(program, name);
         if (location == -1) {
-            System.err.println("Uniform " + name + " не найдена в шейдере");
+            System.err.println("Uniform " + name + " not found in the shader");
         }
         GL20.glUniform1f(location, value);
     }
@@ -70,7 +70,7 @@ public class ShaderProgram {
     public void setUniform3f(String name, float x, float y, float z) {
         int location = GL20.glGetUniformLocation(program, name);
         if (location == -1) {
-            System.err.println("Uniform " + name + " не найдена в шейдере");
+            System.err.println("Uniform " + name + " not found in the shader");
         }
         GL20.glUniform3f(location, x, y, z);
     }
@@ -97,9 +97,5 @@ public class ShaderProgram {
 
     public void cleanup() {
         glDeleteProgram(program);
-    }
-
-    public int getProgram() {
-        return program;
     }
 }
