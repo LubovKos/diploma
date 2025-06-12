@@ -36,10 +36,6 @@ public class ImGuiManager {
     private final ImFloat voxelSize = new ImFloat(0.1f);
     private final ImFloat isoLevel = new ImFloat(10.0f);
 
-    // лассо:
-    private final List<Vector2f> lassoPoints = new ArrayList<>();
-    private boolean isDrawingLasso = false;
-
 
     public ImGuiManager(WindowManager window) {
         ImGui.createContext();
@@ -61,14 +57,14 @@ public class ImGuiManager {
         try {
             ImFont font = fontAtlas.addFontFromFileTTF(fontPath, 18.0f, fontConfig);
             if (font != null) {
-                System.out.println("Шрифт успешно загружен.");
+                System.out.println("The font has been uploaded successfully.");
                 io.setFontDefault(font);
             } else {
-                System.err.println("Ошибка: не удалось загрузить шрифт.");
+                System.err.println("Mistake: couldn't load font.");
                 fontAtlas.addFontDefault();
             }
         } catch (Exception e) {
-            System.err.println("Исключение при загрузке шрифта: " + e.getMessage());
+            System.err.println("Exception when downloading a font texture: " + e.getMessage());
             fontAtlas.addFontDefault();
         } finally {
             fontConfig.destroy();
@@ -91,12 +87,12 @@ public class ImGuiManager {
 
                 fontAtlas.setTexID(fontTextureId);
                 fontAtlas.clearTexData();
-                System.out.println("Текстура шрифта создана: ID=" + fontTextureId + ", ширина=" + width.get() + ", высота=" + height.get());
+                System.out.println("The font texture has been created: ID=" + fontTextureId + ", width=" + width.get() + ", height=" + height.get());
             } else {
-                System.err.println("Ошибка: не удалось создать текстурный атлас шрифтов.");
+                System.err.println("Mistake: couldn't create a texture atlas of fonts.");
             }
         } catch (Exception e) {
-            System.err.println("Исключение при создании текстуры шрифта: " + e.getMessage());
+            System.err.println("Exception when creating a font texture: " + e.getMessage());
         }
 
         // Настройка стиля
@@ -126,7 +122,7 @@ public class ImGuiManager {
 
     public void renderUI(ModelManager modelManager, FileDialogHandler fileDialogHandler, List<ModelLoader.Chunk> chunks,
                          List<Point3D> points, boolean[] isModelLoaded, boolean[] isPointCloud, boolean[] isRendering,
-                         boolean[] lassoMode, InputHandler inputHandler, boolean[] onlyPointsMode) {
+                         boolean[] onlyPointsMode) {
         // Фиксируем позицию и размер панели
         ImGui.setNextWindowPos(0, 0, ImGuiCond.Always);
         ImGui.setNextWindowSize(300, ImGui.getMainViewport().getWorkSizeY(), ImGuiCond.Always);
@@ -169,24 +165,25 @@ public class ImGuiManager {
         ImGui.text("Model processing");
         ImGui.pushStyleColor(ImGuiCol.Button, 0.2f, 0.7f, 0.2f, 1.0f);
         ImGui.inputFloat("Voxel Size", voxelSize, 0.01f, 0.1f, "%.2f");
-        if (voxelSize.get() <= 0) voxelSize.set(0.1f); // Защита от некорректных значений
+        if (voxelSize.get() <= 0) voxelSize.set(0.1f);
         ImGui.inputFloat("Iso Level", isoLevel, 0.1f, 1.0f, "%.1f");
-        if (isoLevel.get() < 0) isoLevel.set(10.0f); // Защита от отрицательных значений
+        if (isoLevel.get() < 0) isoLevel.set(10.0f);
         if (ImGui.button("Marching cubes", 280, 40)) {
             modelManager.applyMarchingCubes(chunks, points, isPointCloud, isRendering, voxelSize.get(), isoLevel.get());
         }
         if (ImGui.button("Remove noise", 280, 40)) {
-            modelManager.removeNoise(chunks, points, isPointCloud, isModelLoaded);
+            modelManager.removeNoise(chunks, isPointCloud, isModelLoaded);
         }
         if (ImGui.button("Smooth model", 280, 40)) {
-            modelManager.smoothModel(chunks, points, isPointCloud);
+            modelManager.smoothModel(chunks);
         }
         if (ImGui.button("Smooth boundaries", 280, 40)){
             modelManager.smoothBoundaries(chunks, points, isPointCloud, isModelLoaded);
         }
         if (ImGui.button("Find the biggest object", 280, 40)) {
-            modelManager.findLargestComponent(chunks, points, isPointCloud);
+            modelManager.findLargestComponent(chunks, isPointCloud);
         }
+
         ImGui.popStyleColor();
         ImGui.spacing();
         ImGui.separator();
@@ -212,49 +209,6 @@ public class ImGuiManager {
         }
         if (ImGui.button("Projection (P)", 280, 40)) {
             modelManager.toggleCameraProjection();
-        }
-
-        ImGui.spacing();
-        ImGui.separator();
-
-        ImGui.text("Selection");
-        boolean currentLassoMode = lassoMode[0];
-        if (ImGui.checkbox("Lasso Mode", currentLassoMode)) {
-            lassoMode[0] = !currentLassoMode; // Переключаем состояние
-            System.out.println("Lasso Mode changed to: " + lassoMode[0]);
-            if (!lassoMode[0]) {
-                lassoPoints.clear();
-                isDrawingLasso = false;
-                for (ModelLoader.Chunk chunk : chunks) {
-                    chunk.setSelectedTriangles(new ArrayList<>());
-                }
-                System.out.println("Lasso mode disabled, selection cleared");
-            } else {
-                System.out.println("Lasso mode enabled");
-            }
-        }
-
-        // Обработка рисования лассо
-        if (lassoMode[0] && inputHandler.isRightMouseButtonPressed() && !ImGui.getIO().getWantCaptureMouse()) {
-            if (!isDrawingLasso) {
-                lassoPoints.clear();
-                isDrawingLasso = true;
-                System.out.println("Started drawing lasso");
-            }
-            Vector2f cursorPos = inputHandler.getCursorPosition();
-            if (lassoPoints.isEmpty() || !lassoPoints.get(lassoPoints.size() - 1).equals(cursorPos)) {
-                lassoPoints.add(cursorPos);
-                System.out.println("Добавлена точка лассо: " + cursorPos);
-            }
-        } else if (isDrawingLasso && !inputHandler.isRightMouseButtonPressed()) {
-            isDrawingLasso = false;
-            if (lassoPoints.size() >= 3) {
-                modelManager.selectTriangles(lassoPoints, chunks, 1920.0f / 1080.0f);
-                System.out.println("Lasso completed with: " + lassoPoints.size() + " points");
-            } else {
-                System.out.println("Lasso cancelled: недостаточно точек");
-            }
-            lassoPoints.clear();
         }
 
         ImGui.spacing();
