@@ -20,7 +20,6 @@ import static org.lwjgl.opengl.GL11.*;
 
 public class StlVisualizer {
 
-
     private static final ExecutorService executorService = Executors.newFixedThreadPool(
             Math.max(2, Runtime.getRuntime().availableProcessors() - 1)
     );
@@ -32,7 +31,7 @@ public class StlVisualizer {
 
         ImGuiManager imgui = new ImGuiManager(window);
         System.out.println("ImGuiManager initialized");
-        Camera camera = new Camera(new Vector3f(0, 0, 5));
+        Camera camera = new Camera(new Vector3f(5, 0, 0));
         System.out.println("Camera initialized");
         Renderer renderer = new Renderer();
         System.out.println("Renderer initialized");
@@ -41,6 +40,7 @@ public class StlVisualizer {
 
         ModelManager modelManager = new ModelManager(loader, camera, renderer);
         boolean[] onlyPointsMode = {false};
+
         // лассо: Добавляем флаг lassoMode
         boolean[] lassoMode = {false};
         // лассо: Передаём lassoMode в InputHandler
@@ -60,21 +60,15 @@ public class StlVisualizer {
             glClearColor(0.15f, 0.15f, 0.15f, 1.0f); // Тёмный фон для сцены
 
             imgui.newFrame();
-            // лассо: Передаём lassoMode и inputHandler в renderUI
-            imgui.renderUI(modelManager, dialogHandler, chunks, points, isModelLoaded, isPointCloud, isRendering, lassoMode, inputHandler, onlyPointsMode);
-
+            imgui.renderUI(modelManager, dialogHandler, chunks, points, isModelLoaded, isPointCloud, isRendering, onlyPointsMode);
 
             if (isRendering[0] && isModelLoaded[0]) {
-                float[] objectColor = modelManager.getObjectColor();
-                Vector3f objectCenter = modelManager.getObjectCenter(); // <--- Добавил получение центра
-
                 if (isPointCloud[0]) {
-                    renderer.renderPoints(window, camera, points, modelManager.getModelYaw(), modelManager.getModelPitch(), objectCenter);
+                    renderer.renderPoints(window, camera, points, modelManager.getModelYaw(), modelManager.getModelPitch());
                 } else {
-                    renderer.render(window, camera, chunks, modelManager.getModelYaw(), modelManager.getModelPitch(), objectColor);
+                    renderer.render(window, camera, chunks, modelManager.getModelYaw(), modelManager.getModelPitch());
                 }
             }
-
             imgui.renderDrawData();
             window.swapBuffers();
         }
