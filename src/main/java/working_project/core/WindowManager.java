@@ -53,7 +53,6 @@ public class WindowManager {
         }
 
         glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_FALSE);
-
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -76,7 +75,6 @@ public class WindowManager {
         glfwSetWindowSize(window, width, height);
         glfwShowWindow(window);
         glfwFocusWindow(window);
-
         glfwMakeContextCurrent(window);
         GL.createCapabilities();
 
